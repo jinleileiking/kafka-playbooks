@@ -1,0 +1,11 @@
+---
+- name: kafka
+  # accelerate: true
+  hosts: kafka
+  # tags:
+  #  - out
+  gather_facts: yes
+  # become: yes
+  # become_user: work
+  roles:
+   - kafka

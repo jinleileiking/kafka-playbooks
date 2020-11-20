@@ -1,0 +1,46 @@
+---
+- name: copy dest files
+  tags: deploy
+  copy: src=dist/kafka/{{ dist_filename }}.tgz dest={{ ansible_env.HOME }}
+
+- name: untar
+  tags: deploy
+  shell: tar xvf {{ dist_filename }}.tgz
+  args: 
+    chdir: "{{ ansible_env.HOME }}"
+
+- name: copy config
+  # gather_facts: yes
+  tags: deploy, cfg
+  template: src={{ item.src }} dest={{ ansible_env.HOME }}/{{ dist_filename }}/config/{{ item.src }}
+  with_items:
+   - { src: 'server.properties' }
+
+- name: start
+  environment:
+    PATH: "{{ ansible_env.HOME }}/jdk1.8.0_101/bin:{{ ansible_env.PATH }}"
+    JAVA_HOME: "{{ ansible_env.HOME }}/jdk1.8.0_101"
+    JMX_PORT: "{{ jmx_port }}"
+    KAFKA_HEAP_OPTS: "-Xmx6g -Xms6g -XX:MetaspaceSize=96m -XX:+UseG1GC -XX:MaxGCPauseMillis=20 -XX:InitiatingHeapOccupancyPercent=35 -XX:G1HeapRegionSize=16M -XX:MinMetaspaceFreeRatio=50 -XX:MaxMetaspaceFreeRatio=80"
+  tags: start, deploy
+  shell: sh -x bin/kafka-server-start.sh -daemon config/server.properties
+  # shell: echo "{{ ansible_env.PATH }}:{{ ansible_env.HOME }}/jdk1.8.0_101/bin"
+  # shell: which java
+  register: out
+  args: 
+    chdir: "{{ ansible_env.HOME }}/{{ dist_filename }}"
+    
+- name: stat
+  tags: stat
+  # shell: ps aux | grep -v grep | grep kafka
+  shell: netstat -ltnp  | grep {{ listeners_port }}
+  register: out
+
+
+- name: debug
+  tags: stat, stop, start
+  debug: var=out.stdout_lines
+- name: debug error
+  tags: stat, stop, start
+  debug: var=out.stderr_lines
+
