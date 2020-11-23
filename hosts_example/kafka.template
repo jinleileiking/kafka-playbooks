@@ -6,4 +6,3 @@ zk=x.x.x.x:yyyy,q.q.q.q:pppp/zzzz
 dist_filename=kafka_2.13-2.6.0
 listeners_port=9090
 jmx_port=9091
-ad_port=9092

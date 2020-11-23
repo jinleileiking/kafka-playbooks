@@ -30,17 +30,43 @@
   args: 
     chdir: "{{ ansible_env.HOME }}/{{ dist_filename }}"
     
-- name: stat
-  tags: stat
-  # shell: ps aux | grep -v grep | grep kafka
+
+
+- name: cleanlog
+  tags: cleanlog
+  shell: rm -rf {{ ansible_env.HOME }}/kafkalog/
+  register: out
+
+- name: seelog
+  tags: seelog
+  shell: ls {{ ansible_env.HOME }}/kafkalog/
+  register: out
+
+- name: stop
+  tags: stop
+  # shell: ps aux | grep kafka | grep java | grep {{ dist_filename }} | awk '{print $2}'
+  shell: ps aux | grep kafka | grep java | grep -v grep | grep {{ dist_filename }} | awk '{print $2}' | xargs kill 
+  register: out
+  # args: 
+  # chdir: "{{ ansible_env.HOME }}/{{ dist_filename }}"
+
+
+- name: ps
+  tags: ps
+  shell: ps aux | grep -v grep | grep kafka | grep {{ dist_filename }} 
+  register: out
+
+
+- name: listen
+  tags: listen
   shell: netstat -ltnp  | grep {{ listeners_port }}
   register: out
 
 
 - name: debug
-  tags: stat, stop, start
+  tags: stat, stop, start, cleanlog, seelog
   debug: var=out.stdout_lines
 - name: debug error
-  tags: stat, stop, start
+  tags: stat, stop, start, cleanlog, seelog
   debug: var=out.stderr_lines
 
